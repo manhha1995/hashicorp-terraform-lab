@@ -7,7 +7,7 @@ terraform {
   }
 }
 
-# data "aws_availability_zone" "available" {}
+data "aws_availability_zone" "available" {}
 
 data "aws_region" "current" {}
 
@@ -29,6 +29,7 @@ resource "aws_vpc" "vpc" {
     name = var.name
     environment = "dev"
     terraform = "true"
+    Region = data.aws_region.current.name
   }
 }
 
@@ -44,4 +45,28 @@ resource "aws_subnet" "private_subnet" {
   vpc_id = aws_vpc.vpc.id
   cidr_block = cidrsubnet(var.cidr_block, 8, each.value)
   availability_zone = "ap-southeast-1b"
+}
+
+resource "aws_route_table" "public_route_table" {
+  vpc_id = aws_vpc.vpc.id
+
+  route = {
+    cidr_block = "0.0.0.0/0"
+    gatewau_id = aws_internet_gateway.internet_gateway.id
+  }
+}
+
+resource "aws_internet_gateway" "internet_gateway" {
+  vpc_id = aws_vpc.vpc.id
+  tags = {
+    name = "igw"
+  }
+}
+
+module "vpc" {
+  source = "./modules/vpc"
+  subnet_id = ""
+  security_groups = ""
+  size = ""
+  ami = ""
 }
